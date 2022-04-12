@@ -36,7 +36,7 @@ type FavoritesTable struct {
 	ApiUrl string `json: "apiurl"`
 }
 
-type Thread struct {
+type ThreadTable struct {
 	ThreadId int32 `json: "threadid"`
 	UserId int32 `json: "userid"`
 	Name string `json: "name"`
