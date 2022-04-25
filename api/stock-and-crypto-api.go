@@ -11,6 +11,7 @@ import (
 	_"github.com/denisenkom/go-mssqldb"
 	"fmt"
 	"time"
+	"github.com/google/uuid"
 )
 
 var db *sql.DB
@@ -32,17 +33,20 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", mwCheck(readUserTable)).Methods(http.MethodPost)
-	router.HandleFunc("/viewThreads", mwCheck(readThreadTable)).Methods(http.MethodPost)
-	router.HandleFunc("viewStockCryptoTable", mwCheck(readApiFavoritesTable)).Methods(http.MethodPost)
-	router.HandleFunc("/viewThreads", mwCheck(readThreadFavoritesTable)).Methods(http.MethodPost)
-	router.HandleFunc("/viewThread", mwCheck(readResponseTable)).Methods(http.MethodPost)
+	// Handle api endpoints
+	router.HandleFunc("/login", Login).Methods(http.MethodPost)
+	router.HandleFunc("/register", Register).Methods(http.MethodPost)
+	router.HandleFunc("/forgotPassword", ForgotPassword).Methods(http.MethodPost)
 
-	router.HandleFunc("/register", mwCheck(createNewUser)).Methods(http.MethodPost)
-	router.HandleFunc("/createThread", mwCheck(createNewThread)).Methods(http.MethodPost)
-	router.HandleFunc("/newApiFavorite", mwCheck(createNewApiFavorite)).Methods(http.MethodPost)
-	router.HandleFunc("/newResponse", mwCheck(createResponse)).Methods(http.MethodPost)
-	router.HandleFunc("/newThreadFavorite", mwCheck(createThreadFavorite)).Methods(http.MethodPost)
+	router.HandleFunc("/readThread", ReadThreadTable).Methods(http.MethodPost)
+	router.HandleFunc("readApiFavorites", ReadApiFavoritesTable).Methods(http.MethodPost)
+	router.HandleFunc("/readThreadFavorites", ReadThreadFavoritesTable).Methods(http.MethodPost)
+	router.HandleFunc("/readResponse", ReadResponseTable).Methods(http.MethodPost)
+
+	router.HandleFunc("/newThread", mwCheck(CreateNewThread)).Methods(http.MethodPost)
+	router.HandleFunc("/newThreadResponse", mwCheck(CreateResponse)).Methods(http.MethodPost)
+	router.HandleFunc("/newApiFavorite", mwCheck(CreateNewApiFavorite)).Methods(http.MethodPost)
+	router.HandleFunc("/newThreadFavorite", mwCheck(CreateThreadFavorite)).Methods(http.MethodPost)
 
 	srv := &http.Server {
 		Addr: ":8000",
@@ -55,14 +59,47 @@ func main() {
 }
 
 func mwCheck(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) { // Handle authentication
-		// if valid auth f(w, r)
-		// else send_error(w, r)
-		f(w, r)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !validateUser(r) {
+			http.Error(w, "Unauthorized user", http.StatusInternalServerError)
+		} else {
+			f(w, r)
+		}
 	}
 }
 
-func readUserTable(w http.ResponseWriter, r *http.Request) {
+func validateUser(r *http.Request) bool {
+	ctx := context.Background()
+	
+	// Verify database is running
+	err := db.PingContext(ctx)
+	if err != nil {
+		return false
+	}
+
+	var s model.Session
+	err = json.NewDecoder(r.Body).Decode(&s)
+	if err != nil {
+		return false
+	}
+
+	if s.UserGuid == "" {
+		return false
+	}
+
+	tsqlQuery := fmt.Sprintf("SELECT SessionId FROM Session WHERE UserGuid='%s' AND IsActive=1;", s.UserGuid)
+
+	row := db.QueryRowContext(ctx, tsqlQuery)
+
+	var sid int32
+	if err = row.Scan(&sid); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func ReadUserTable(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -70,36 +107,9 @@ func readUserTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlQuery := fmt.Sprintf("SELECT UserId, Email, Username, Password, ThreadId, ResponseId FROM Users")
-
-	// Execute query
-	rows, err := db.QueryContext(ctx, tsqlQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	defer rows.Close()
-
-	var users []model.UserTable
-	for rows.Next() {
-		var user model.UserTable
-		rows.Scan(&user.UserId, &user.Email, &user.Username, &user.Password, &user.ThreadId, &user.ResponseId)
-		users = append(users, user)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.UserJsonResponse{ Type: "Success", Data: users }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func readThreadTable(w http.ResponseWriter, r *http.Request) {
+func ReadThreadTable(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -107,36 +117,9 @@ func readThreadTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlQuery := fmt.Sprintf("SELECT ThreadId, UserId, ResponseId, Name, Description, DateCreated FROM Thread")
-
-	// Execute query
-	rows, err := db.QueryContext(ctx, tsqlQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	defer rows.Close()
-
-	var threads []model.ThreadTable
-	for rows.Next() {
-		var thread model.ThreadTable
-		rows.Scan(&thread.ThreadId, &thread.UserId, &thread.ResponseId, &thread.Name, &thread.Description, &thread.DateCreated)
-		threads = append(threads, thread)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ThreadJsonResponse{ Type: "Success", Data: threads }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func readApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
+func ReadApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -144,36 +127,9 @@ func readApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlQuery := fmt.Sprintf("SELECT ApiFavoritesId, UserId, StockId, ApiUrl FROM ApiFavorites")
-
-	// Execute query
-	rows, err := db.QueryContext(ctx, tsqlQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	defer rows.Close()
-
-	var apiFavorites []model.ApiFavoritesTable
-	for rows.Next() {
-		var apiFavorite model.ApiFavoritesTable
-		rows.Scan(&apiFavorite.ApiFavoritesId, &apiFavorite.UserId, &apiFavorite.StockId, &apiFavorite.ApiUrl)
-		apiFavorites = append(apiFavorites, apiFavorite)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ApiFavoritesJsonResponse{ Type: "Success", Data: apiFavorites }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func readResponseTable(w http.ResponseWriter, r *http.Request) {
+func ReadResponseTable(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -181,36 +137,9 @@ func readResponseTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlQuery := fmt.Sprintf("SELECT ResponseId, UserId, ThreadId, Reply FROM Response")
-
-	// Execute query
-	rows, err := db.QueryContext(ctx, tsqlQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	defer rows.Close()
-
-	var responses []model.ResponseTable
-	for rows.Next() {
-		var response model.ResponseTable
-		rows.Scan(&response.ResponseId, &response.UserId, &response.ThreadId, &response.Reply)
-		responses = append(responses, response)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var resp = model.ResponsesJsonResponse{ Type: "Success", Data: responses }
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func readThreadFavoritesTable(w http.ResponseWriter, r *http.Request) {
+func ReadThreadFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -218,36 +147,9 @@ func readThreadFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlQuery := fmt.Sprintf("SELECT ThreadFavoritesId, UserId FROM ThreadFavorites")
-
-	// Execute query
-	rows, err := db.QueryContext(ctx, tsqlQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	defer rows.Close()
-
-	var threadFavorites []model.ThreadFavoritesTable
-	for rows.Next() {
-		var threadFavorite model.ThreadFavoritesTable
-		rows.Scan(&threadFavorite.ThreadFavoritesId, &threadFavorite.UserId)
-		threadFavorites = append(threadFavorites, threadFavorite)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ThreadFavoritesJsonResponse{ Type: "Success", Data: threadFavorites }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func createNewUser(w http.ResponseWriter, r *http.Request) {
+func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -255,21 +157,9 @@ func createNewUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlMutation := fmt.Sprintf("INSERT INTO Users VALUES(%s, %s, %s)") // finish mutation
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.UserJsonResponse{ Type: "Success", Data: }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func createNewThread(w http.ResponseWriter, r *http.Request) {
+func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -277,21 +167,9 @@ func createNewThread(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlMutation := fmt.Sprintf("INSERT INTO Thread VALUES(%d, %s, %s, %s)") // finish mutation
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ThreadJsonResponse{ Type: "Success", Data:  }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func createNewApiFavorite(w http.ResponseWriter, r *http.Request) {
+func CreateResponse(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -299,21 +177,9 @@ func createNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlMutation := fmt.Sprintf("INSERT INTO ApiFavorites VALUES(%d, %s, %s)") // finish mutation
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ApiFavoritesJsonResponse{ Type: "Success", Data:  }
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func createResponse(w http.ResponseWriter, r *http.Request) {
+func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -321,21 +187,9 @@ func createResponse(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	tsqlMutation := fmt.Sprintf("INSERT INTO Response VALUES(%d, %d, %s)") // finish mutation
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var resp = model.ResponsesJsonResponse{ Type: "Success", Data:  }
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }
 
-func createThreadFavorite(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Verify Database is alive
@@ -343,16 +197,24 @@ func createThreadFavorite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
 
-	tsqlMutation := fmt.Sprintf("INSERT INTO ThreadFavorite VALUES(%d)") // finish mutation
+func Register(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	var response = model.ThreadFavorite{ Type: "Success", Data:  }
-	err = json.NewEncoder(w).Encode(response)
+	// Verify Database is alive
+	err := db.PingContext(ctx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
+	// Verify Database is alive
+	err := db.PingContext(ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
