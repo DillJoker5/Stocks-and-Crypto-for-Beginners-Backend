@@ -39,7 +39,7 @@ func main() {
 	router.HandleFunc("/forgotPassword", ForgotPassword).Methods(http.MethodPost)
 
 	router.HandleFunc("/readThread", ReadThreadTable).Methods(http.MethodPost)
-	router.HandleFunc("readApiFavorites", ReadApiFavoritesTable).Methods(http.MethodPost)
+	router.HandleFunc("/readApiFavorites", ReadApiFavoritesTable).Methods(http.MethodPost)
 	router.HandleFunc("/readThreadFavorites", ReadThreadFavoritesTable).Methods(http.MethodPost)
 	router.HandleFunc("/readResponse", ReadResponseTable).Methods(http.MethodPost)
 
@@ -70,32 +70,24 @@ func mwCheck(f func(w http.ResponseWriter, r *http.Request)) func(w http.Respons
 
 func validateUser(r *http.Request) bool {
 	ctx := context.Background()
-	
-	// Verify database is running
 	err := db.PingContext(ctx)
 	if err != nil {
 		return false
 	}
+	ug := r.Header.Get("userguid")
+	if ug == "" {
+		return false
+	}
 
-	var s model.Session
-	err = json.NewDecoder(r.Body).Decode(&s)
+	tsql := fmt.Sprintf("SELECT SessionId FROM Sessions WHERE UserGuid='%s' AND IsActive=1;", ug)
+	row := db.QueryRowContext(ctx, tsql)
 	if err != nil {
 		return false
 	}
-
-	if s.UserGuid == "" {
-		return false
-	}
-
-	tsqlQuery := fmt.Sprintf("SELECT SessionId FROM Session WHERE UserGuid='%s' AND IsActive=1;", s.UserGuid)
-
-	row := db.QueryRowContext(ctx, tsqlQuery)
-
-	var sid int32
+	var sid int
 	if err = row.Scan(&sid); err != nil {
 		return false
 	}
-
 	return true
 }
 
@@ -107,6 +99,32 @@ func ReadUserTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	tsqlQuery := "SELECT User_Id, Email, Username, Password FROM Users;"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	var users []model.UserTable
+	for rows.Next() {
+		var user model.UserTable
+		rows.Scan(&user.UserId, &user.Email, &user.Username, &user.Password)
+		users = append(users, user)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.LoginJsonResponse{ Message: "", Type: "Success", Data: users }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ReadThreadTable(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +135,32 @@ func ReadThreadTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	tsqlQuery := "SELECT Thread_Id, User_Id, Name, Description, Date_Created FROM Threads"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	var threads []model.ThreadTable
+	for rows.Next() {
+		var thread model.ThreadTable
+		rows.Scan(&thread.ThreadId, &thread.UserId, &thread.Name, &thread.Description, &thread.DateCreated)
+		threads = append(threads, thread)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.ThreadJsonResponse{ Message: "", Type: "Success", Data: threads }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ReadApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +170,32 @@ func ReadApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	err := db.PingContext(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	tsqlQuery := "SELECT Api_Favorites_Id, User_Id, Stock_Id, Api_Url FROM Api-Favorites;"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	var apiFavorites []model.ApiFavoritesTable
+	for rows.Next() {
+		var apiFavorite model.ApiFavoritesTable
+		rows.Scan(&apiFavorite.ApiFavoritesId, &apiFavorite.UserId, &apiFavorite.StockId, &apiFavorite.ApiUrl)
+		apiFavorites = append(apiFavorites, apiFavorite)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.ApiFavoritesJsonResponse{ Message: "", Type: "Success", Data: apiFavorites }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
