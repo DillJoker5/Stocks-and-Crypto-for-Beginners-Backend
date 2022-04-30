@@ -309,7 +309,7 @@ func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tsqlQuery = fmt.Sprintf("INSERT INTO Threads VALUES(%d, %d, '%s', '%s', '%s')", nThread.UserId, nThread.ResponseId, nThread.Name, nThread.Description, nThread.DateCreated)
+	tsqlQuery = fmt.Sprintf("INSERT INTO Threads VALUES(%d, '%s', '%s', '%s')", nThread.UserId, nThread.Name, nThread.Description, nThread.DateCreated)
 
 	res, err := db.ExecContext(ctx, tsqlQuery)
 	if err != nil {
@@ -367,7 +367,7 @@ func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tsqlQuery = fmt.Sprintf("INSERT INTO Api_Favorites VALUES(%d, %s, %s)", nApiFavorite.UserId, nApiFavorite.StockId, nApiFavorite.ApiUrl)
+	tsqlQuery = fmt.Sprintf("INSERT INTO Api_Favorites VALUES(%d, '%s', '%s');", nApiFavorite.UserId, nApiFavorite.StockId, nApiFavorite.ApiUrl)
 
 	res, err := db.ExecContext(ctx, tsqlQuery)
 	if err != nil {
