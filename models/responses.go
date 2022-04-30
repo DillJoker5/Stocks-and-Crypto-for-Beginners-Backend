@@ -1,8 +1,13 @@
 package model
 
+import (
+	"time"
+)
+
 type ResponseTable struct {
 	ResponseId int32 `json: "response_id"`
 	UserId int32 `json: "user_id"`
 	ThreadId int32 `json: "thread_id"`
-	Reply string `json: "reply"`
+	Description string `json: "description"`
+	DateCreated time.Time `json: "date_created"`
 }
