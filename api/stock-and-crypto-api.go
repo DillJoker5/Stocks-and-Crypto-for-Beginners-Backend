@@ -281,6 +281,56 @@ func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	var nThread model.Thread
+
+	err = json.NewDecoder(r.Body).Decode(&nThread)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsqlQuery := "SELECT Thread_Id, User_Id, Name, Description, Date_Created FROM Threads"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread model.ThreadTable
+		rows.Scan(&thread.ThreadId, &thread.UserId, &thread.Name, &thread.Description, &thread.DateCreated)
+		if thread.UserId == nThread.UserId && thread.Name == nThread.Name && thread.Description == nThread.Description {
+			http.Error(w, "The given thread has already been created!", http.StatusBadRequest)
+			return
+		}
+	}
+
+	tsqlQuery = fmt.Sprintf("INSERT INTO Threads VALUES(%d, '%s', '%s', '%s')", nThread.UserId, nThread.Name, nThread.Description, nThread.DateCreated)
+
+	res, err := db.ExecContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{ Message: "Successfully created the Thread!", Type: "Success" }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
@@ -291,6 +341,54 @@ func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	var nApiFavorite model.ApiFavorite
+
+	err = json.NewDecoder(r.Body).Decode(&nApiFavorite)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsqlQuery := "SELECT Api_Favorites_Id, User_Id, Stock_Id, Api_Url FROM Api_Favorites;"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for rows.Next() {
+		var apiFavorite model.ApiFavoritesTable
+		rows.Scan(&apiFavorite.ApiFavoritesId, &apiFavorite.UserId, &apiFavorite.StockId, &apiFavorite.ApiUrl)
+		if apiFavorite.UserId == nApiFavorite.UserId && apiFavorite.StockId == nApiFavorite.StockId && apiFavorite.ApiUrl == nApiFavorite.ApiUrl {
+			http.Error(w, "The given Api Favorite has already been created!", http.StatusBadRequest)
+			return
+		}
+	}
+
+	tsqlQuery = fmt.Sprintf("INSERT INTO Api_Favorites VALUES(%d, '%s', '%s');", nApiFavorite.UserId, nApiFavorite.StockId, nApiFavorite.ApiUrl)
+
+	res, err := db.ExecContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{ Message: "Successfully created the Api Favorite!", Type: "Success" }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateResponse(w http.ResponseWriter, r *http.Request) {
@@ -300,6 +398,56 @@ func CreateResponse(w http.ResponseWriter, r *http.Request) {
 	err := db.PingContext(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	var nResponse model.Response
+
+	err = json.NewDecoder(r.Body).Decode(&nResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsqlQuery := "SELECT Response_Id, User_Id, Thread_Id, Description, Date_Created FROM Responses;"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var response model.ResponseTable
+		rows.Scan(&response.ResponseId, &response.UserId, &response.ThreadId, &response.Description, &response.DateCreated)
+		if response.UserId == nResponse.UserId && response.ThreadId == nResponse.ThreadId && response.Description == nResponse.Description {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	tsqlQuery = fmt.Sprintf("INSERT INTO Responses VALUES(%d, %d, '%s', '%s')", nResponse.UserId, nResponse.ThreadId, nResponse.Description, nResponse.DateCreated)
+
+	res, err := db.ExecContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{ Message: "Successfully create Response", Type: "Success" }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
