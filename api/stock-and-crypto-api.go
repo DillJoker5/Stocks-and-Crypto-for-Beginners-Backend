@@ -281,6 +281,56 @@ func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	var nThread model.Thread
+
+	err = json.NewDecoder(r.Body).Decode(&nThread)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsqlQuery := "SELECT Thread_Id, User_Id, Name, Description, Date_Created FROM Threads"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread model.ThreadTable
+		rows.Scan(&thread.ThreadId, &thread.UserId, &thread.Name, &thread.Description, &thread.DateCreated)
+		if thread.UserId == nThread.UserId && thread.Name == nThread.Name && thread.Description == nThread.Description {
+			http.Error(w, "The given thread has already been created!", http.StatusBadRequest)
+			return
+		}
+	}
+
+	tsqlQuery = fmt.Sprintf("INSERT INTO Threads VALUES(%d, %d, '%s', '%s', '%s')", nThread.UserId, nThread.ResponseId, nThread.Name, nThread.Description, nThread.DateCreated)
+
+	res, err := db.ExecContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{ Message: "Successfully created the Thread!", Type: "Success" }
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
