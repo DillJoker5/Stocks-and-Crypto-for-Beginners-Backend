@@ -1,5 +1,13 @@
 package model
 
+type User struct {
+	Email string `json: "email"`
+	Username string `json: "username"`
+	Password string `json: "password"`
+	ThreadId int32 `json: "thread_id"`
+	ResponseId int32 `json: "response_id"`
+}
+
 type UserTable struct {
 	UserId int32 `json: "user_id"`
 	Email string `json: "email"`
