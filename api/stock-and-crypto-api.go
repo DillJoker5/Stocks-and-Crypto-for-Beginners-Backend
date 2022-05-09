@@ -468,7 +468,7 @@ func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tsqlQuery := "SELECT Thread_Favorites, User_Id FROM Thread_Favorites;"
+	tsqlQuery := "SELECT Thread_Favorites_Id, User_Id FROM Thread_Favorites;"
 
 	rows, err := db.QueryContext(ctx, tsqlQuery)
 	if err != nil {
@@ -482,12 +482,12 @@ func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 		var Thread model.ThreadFavoritesTable
 		rows.Scan(&Thread.ThreadFavoritesId, &Thread.UserId)
 		if Thread.UserId == nThread.UserId {
-			http.Error(w, "thread already favored", http.StatusInternalServerError)
-
+			http.Error(w, "The given thread favorite has already been created", http.StatusInternalServerError)
+			return
 		}
 	}
 
-	tsqlQuery = fmt.Sprintf("INSERT INTO Thread_Favorites VALUES(%d)", nThread.UserId)
+	tsqlQuery = fmt.Sprintf("INSERT INTO Thread_Favorites VALUES(%d);", nThread.UserId)
 
 	res, err := db.ExecContext(ctx, tsqlQuery)
 	if err != nil {
@@ -533,6 +533,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No login found", http.StatusUnauthorized)
 		return
 	}
+
 	tsql = fmt.Sprintf("SELECT SessionId FROM Sessions WHERE User_Id=%d AND IsActive=1;", uid)
 	row = db.QueryRowContext(ctx, tsql)
 
@@ -655,7 +656,7 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tsql := fmt.Sprintf("UPDATE Users SET Password = 'P@$$word!' WHERE Email = '%s'", u.Email)
-	fmt.Sprintf(tsql)
+
 	res, err := db.ExecContext(ctx, tsql)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
