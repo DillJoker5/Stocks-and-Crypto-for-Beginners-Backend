@@ -1,22 +1,23 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	model "stock-and-crypto-api/models"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"database/sql"
-	"context"
-	_"github.com/denisenkom/go-mssqldb"
-	"fmt"
-	//"time"
-	//"github.com/google/uuid"
+	gomail "gopkg.in/gomail.v2"
 )
 
 var db *sql.DB
-var server = "DESKTOP-K7IIMGF"
-var port = 1433
+var server = "localhost"
+var port = 59236
 var user = "finalwebprojectuser"
 var password = "finalwebproject2022!"
 var database = "Final_Web_Project"
@@ -50,8 +51,8 @@ func main() {
 	router.HandleFunc("/newApiFavorite", mwCheck(CreateNewApiFavorite)).Methods(http.MethodPost)
 	router.HandleFunc("/newThreadFavorite", mwCheck(CreateThreadFavorite)).Methods(http.MethodPost)
 
-	srv := &http.Server {
-		Addr: ":8000",
+	srv := &http.Server{
+		Addr:    ":8000",
 		Handler: router,
 	}
 
@@ -120,8 +121,11 @@ func ReadUserTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.LoginJsonResponse{ Message: "", Type: "Success", Data: users }
+	resp := model.UserJsonResponse{Message: "", Type: "Success", Data: users}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -156,8 +160,11 @@ func ReadThreadTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.ThreadJsonResponse{ Message: "", Type: "Success", Data: threads }
+	resp := model.ThreadJsonResponse{Message: "", Type: "Success", Data: threads}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -192,8 +199,11 @@ func ReadApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.ApiFavoritesJsonResponse{ Message: "", Type: "Success", Data: apiFavorites }
+	resp := model.ApiFavoritesJsonResponse{Message: "", Type: "Success", Data: apiFavorites}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -228,8 +238,11 @@ func ReadResponseTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.ResponsesJsonResponse{ Message: "", Type: "Success", Data: responses }
+	resp := model.ResponsesJsonResponse{Message: "", Type: "Success", Data: responses}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -264,8 +277,11 @@ func ReadThreadFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.ThreadFavoritesJsonResponse{ Message: "", Type: "Success", Data: threadFavorites }
+	resp := model.ThreadFavoritesJsonResponse{Message: "", Type: "Success", Data: threadFavorites}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -324,8 +340,11 @@ func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.GenericJsonResponse{ Message: "Successfully created the Thread!", Type: "Success" }
+	resp := model.GenericJsonResponse{Message: "Successfully created the Thread!", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -382,8 +401,11 @@ func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.GenericJsonResponse{ Message: "Successfully created the Api Favorite!", Type: "Success" }
+	resp := model.GenericJsonResponse{Message: "Successfully created the Api Favorite!", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -442,8 +464,11 @@ func CreateResponse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.GenericJsonResponse{ Message: "Successfully create Response", Type: "Success" }
+	resp := model.GenericJsonResponse{Message: "Successfully create Response", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -459,6 +484,58 @@ func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	var nThread model.ThreadFavorites
+	err = json.NewDecoder(r.Body).Decode(&nThread)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsqlQuery := "SELECT Thread_Favorites_Id, User_Id FROM Thread_Favorites;"
+
+	rows, err := db.QueryContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var Thread model.ThreadFavoritesTable
+		rows.Scan(&Thread.ThreadFavoritesId, &Thread.UserId)
+		if Thread.UserId == nThread.UserId {
+			http.Error(w, "The given thread favorite has already been created", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	tsqlQuery = fmt.Sprintf("INSERT INTO Thread_Favorites VALUES(%d);", nThread.UserId)
+
+	res, err := db.ExecContext(ctx, tsqlQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{Message: "Successfully created Thread Favorite", Type: "Success"}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -469,6 +546,57 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	var u model.UserTable
+	err = json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//Check for valid login
+	tsql := fmt.Sprintf("SELECT User_Id FROM Users WHERE Email='%s' AND Password='%s';", u.Email, u.Password)
+	row := db.QueryRowContext(ctx, tsql)
+	var uid int
+	if err = row.Scan(&uid); err != nil {
+		http.Error(w, "No login found", http.StatusUnauthorized)
+		return
+	}
+
+	tsql = fmt.Sprintf("SELECT SessionId FROM Sessions WHERE User_Id=%d AND IsActive=1;", uid)
+	row = db.QueryRowContext(ctx, tsql)
+
+	var sid int
+	err = row.Scan(&sid)
+	fmt.Println(sid)
+	if sid > 0 {
+		http.Error(w, "You are already logged in!", http.StatusForbidden)
+		return
+	}
+	//Log user in by creating a session
+	guid := uuid.New()
+	tsql = fmt.Sprintf("INSERT INTO Sessions VALUES(%d, '%s', 1)", uid, guid)
+	res, err := db.ExecContext(ctx, tsql)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
+	w.WriteHeader(http.StatusOK)
+	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String()}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -479,6 +607,55 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	var u model.User
+	err = json.NewDecoder(r.Body).Decode((&u))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//Check to see if email or username is already in use
+	tsql := "SELECT Username, Email FROM Users;"
+	rows, err := db.QueryContext(ctx, tsql)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var nu model.UserTable
+		rows.Scan(&nu.Username, &nu.Email)
+		if nu.Username == u.Username || nu.Email == u.Email {
+			http.Error(w, "The given username or email has already been used!", http.StatusBadRequest)
+			return
+		}
+	}
+
+	//Add username
+	tsql = fmt.Sprintf("INSERT INTO Users VALUES ('%s','%s','%s');", u.Email, u.Username, u.Password)
+	res, err := db.ExecContext(ctx, tsql)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
+	w.WriteHeader(http.StatusOK)
+	resp := model.LoginJsonResponse{Message: "Added User ", Type: "Success"}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ForgotPassword(w http.ResponseWriter, r *http.Request) {
@@ -488,5 +665,46 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	err := db.PingContext(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	var u model.User
+	err = json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", "cooltestemail23@gmail.com")
+	msg.SetHeader("To", u.Email)
+	msg.SetHeader("Subject", "Password Reset")
+	msg.SetBody("text/html", "<b>Your password has been changed to a temporary Password of P@$$word!</b>")
+
+	n := gomail.NewDialer("smtp.gmail.com", 587, "cooltestemail23@gmail.com", "PassTest1!")
+
+	// Send the email
+	err = n.DialAndSend(msg)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tsql := fmt.Sprintf("UPDATE Users SET Password = 'P@$$word!' WHERE Email = '%s'", u.Email)
+
+	res, err := db.ExecContext(ctx, tsql)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp := model.GenericJsonResponse{Message: "Message Sent", Type: "Successessfully reset Password"}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
