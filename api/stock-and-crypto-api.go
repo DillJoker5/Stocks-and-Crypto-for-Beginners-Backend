@@ -121,6 +121,9 @@ func ReadUserTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.UserJsonResponse{Message: "", Type: "Success", Data: users}
 	err = json.NewEncoder(w).Encode(resp)
@@ -157,6 +160,9 @@ func ReadThreadTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.ThreadJsonResponse{Message: "", Type: "Success", Data: threads}
 	err = json.NewEncoder(w).Encode(resp)
@@ -193,6 +199,9 @@ func ReadApiFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.ApiFavoritesJsonResponse{Message: "", Type: "Success", Data: apiFavorites}
 	err = json.NewEncoder(w).Encode(resp)
@@ -229,6 +238,9 @@ func ReadResponseTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.ResponsesJsonResponse{Message: "", Type: "Success", Data: responses}
 	err = json.NewEncoder(w).Encode(resp)
@@ -265,6 +277,9 @@ func ReadThreadFavoritesTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.ThreadFavoritesJsonResponse{Message: "", Type: "Success", Data: threadFavorites}
 	err = json.NewEncoder(w).Encode(resp)
@@ -325,6 +340,9 @@ func CreateNewThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.GenericJsonResponse{Message: "Successfully created the Thread!", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
@@ -383,6 +401,9 @@ func CreateNewApiFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.GenericJsonResponse{Message: "Successfully created the Api Favorite!", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
@@ -443,6 +464,9 @@ func CreateResponse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.GenericJsonResponse{Message: "Successfully create Response", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
@@ -502,6 +526,9 @@ func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.GenericJsonResponse{Message: "Successfully created Thread Favorite", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
@@ -559,6 +586,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String()}
 	err = json.NewEncoder(w).Encode(resp)
@@ -616,6 +646,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
 	resp := model.LoginJsonResponse{Message: "Added User ", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
