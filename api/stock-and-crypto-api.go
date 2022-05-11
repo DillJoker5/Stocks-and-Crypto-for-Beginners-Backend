@@ -42,8 +42,8 @@ func main() {
 
 	router.HandleFunc("/readUsers", ReadUserTable).Methods(http.MethodPost)
 	router.HandleFunc("/readThread", ReadThreadTable).Methods(http.MethodPost)
-	router.HandleFunc("/readApiFavorites", ReadApiFavoritesTable).Methods(http.MethodPost)
-	router.HandleFunc("/readThreadFavorites", ReadThreadFavoritesTable).Methods(http.MethodPost)
+	router.HandleFunc("/readApiFavorites", mwCheck(ReadApiFavoritesTable)).Methods(http.MethodPost)
+	router.HandleFunc("/readThreadFavorites", mwCheck(ReadThreadFavoritesTable)).Methods(http.MethodPost)
 	router.HandleFunc("/readResponse", ReadResponseTable).Methods(http.MethodPost)
 
 	router.HandleFunc("/newThread", mwCheck(CreateNewThread)).Methods(http.MethodPost)
@@ -590,7 +590,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String()}
+	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String(), UserId: uId }
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
