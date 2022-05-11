@@ -15,7 +15,7 @@ type LoginJsonResponse struct {
 	Type     string `json: "type"`
 	Message  string `json: "message"`
 	UserGuid string `json: "userguid"`
-	UserId string `json: "userid"`
+	UserId int `json: "userid"`
 }
 
 type ApiFavoritesJsonResponse struct {

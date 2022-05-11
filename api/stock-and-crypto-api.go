@@ -590,7 +590,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String(), UserId: uId }
+	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String(), UserId: uid }
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
