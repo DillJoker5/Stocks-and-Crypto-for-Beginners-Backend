@@ -553,7 +553,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Check for valid login
-	tsql := fmt.Sprintf("SELECT User_Id FROM Users WHERE Email='%s' AND Password='%s';", u.Email, u.Password)
+	tsql := fmt.Sprintf("SELECT User_Id FROM Users WHERE Username='%s' AND Password='%s';", u.Username, u.Password)
 	row := db.QueryRowContext(ctx, tsql)
 	var uid int
 	if err = row.Scan(&uid); err != nil {
