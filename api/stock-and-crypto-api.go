@@ -503,15 +503,6 @@ func CreateThreadFavorite(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 
-	for rows.Next() {
-		var Thread model.ThreadFavoritesTable
-		rows.Scan(&Thread.ThreadFavoritesId, &Thread.UserId)
-		if Thread.UserId == nThread.UserId {
-			http.Error(w, "The given thread favorite has already been created", http.StatusInternalServerError)
-			return
-		}
-	}
-
 	tsqlQuery = fmt.Sprintf("INSERT INTO Thread_Favorites VALUES(%d);", nThread.UserId)
 
 	res, err := db.ExecContext(ctx, tsqlQuery)
