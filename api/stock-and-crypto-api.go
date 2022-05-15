@@ -39,6 +39,7 @@ func main() {
 	router.HandleFunc("/login", Login).Methods(http.MethodPost)
 	router.HandleFunc("/register", Register).Methods(http.MethodPost)
 	router.HandleFunc("/forgotPassword", ForgotPassword).Methods(http.MethodPost)
+	router.HandleFunc("/logout", Logout).Methods(http.MethodPost)
 
 	router.HandleFunc("/readUsers", ReadUserTable).Methods(http.MethodPost)
 	router.HandleFunc("/readThread", ReadThreadTable).Methods(http.MethodPost)
@@ -566,7 +567,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var sid int
 	err = row.Scan(&sid)
-	fmt.Println(sid)
+
 	if sid > 0 {
 		http.Error(w, "You are already logged in!", http.StatusForbidden)
 		return
@@ -590,7 +591,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
 	w.WriteHeader(http.StatusOK)
-	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String(), UserId: uid }
+	resp := model.LoginJsonResponse{Message: "Logged In", Type: "Success", UserGuid: guid.String(), UserId: uid}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -702,6 +703,46 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := model.GenericJsonResponse{Message: "Message Sent", Type: "Successessfully reset Password"}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	err := db.PingContext(ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var s model.Session
+	err = json.NewDecoder(r.Body).Decode(&s)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if s.UserGuid == "" {
+		http.Error(w, "No userguid provided", http.StatusBadRequest)
+		return
+	}
+	tsql := fmt.Sprintf("UPDATE Sessions SET IsActive=0 WHERE UserGuid='%s'", s.UserGuid)
+	res, err := db.ExecContext(ctx, tsql)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count != 1 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := model.GenericJsonResponse{Message: "Logged out", Type: "Success"}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

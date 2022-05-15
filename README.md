@@ -12,6 +12,11 @@ Tyler Fahney and Dylan Chirigotis
 go run api/stock-and-crypto-api.go
 ```
 
+## Database 
+Download file Webdev_Final_Database tyler_dylan.sql \
+Open up Azure Database or other program that you are using for database \
+Run all statements found in document
+
 # Languages Used
 * SQL
 * Go
