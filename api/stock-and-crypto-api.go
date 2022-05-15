@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	model "stock-and-crypto-api/models"
-
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
